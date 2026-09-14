@@ -1,0 +1,66 @@
+name: Issue Security Warning
+
+on:
+  issues:
+    types:
+      - closed
+
+permissions:
+  issues: write
+
+jobs:
+  security-warning:
+    name: Warn Before Security Lock
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check who closed the Issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const closer = context.payload.sender;
+
+            // Pull Requests are excluded.
+            if (issue.pull_request) {
+              return;
+            }
+
+            // Continue only when the original Issue creator
+            // is the person who closed the Issue.
+            if (!issue.user || !closer) {
+              return;
+            }
+
+            if (issue.user.login !== closer.login) {
+              return;
+            }
+
+            const message = [
+              "⚠️ **NOTICE — AUTOMATIC SECURITY PROCESS STARTED**",
+              "",
+              `Hello @${closer.login},`,
+              "",
+              "As mentioned in the previous Issue notice, please keep your Issue open while the reported problem remains unresolved.",
+              "",
+              "You have closed an Issue that you originally created.",
+              "",
+              "⏳ **You have 24 hours to provide any final information or clarification to the project's developers or maintainers.**",
+              "",
+              "🔒 After this 24-hour period, the `Issue Security Lock` workflow will automatically process this Issue according to the project's Issue management policy.",
+              "",
+              "Please note that reopening the Issue does **not** cancel or reset this automated process. The Issue may be closed again and locked automatically when the applicable conditions are met.",
+              "",
+              "If the reported problem remains unresolved, please open a new Issue with the latest information after the security process is complete.",
+              "",
+              "Thank you for your understanding and cooperation.",
+              "",
+              "— Issue Security Bot"
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: message
+            });

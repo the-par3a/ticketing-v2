@@ -1,0 +1,52 @@
+name: Issue Welcome
+
+on:
+  issues:
+    types:
+      - opened
+
+permissions:
+  issues: write
+
+jobs:
+  welcome:
+    name: Welcome Issue
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send welcome message
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+
+            const message = [
+              "👋 **Hello and welcome!**",
+              "",
+              "Thank you for reporting a problem, suggesting an improvement, or sharing feedback with us.",
+              "",
+              "Your Issue has been received and is now available for review by the project's developers and maintainers.",
+              "",
+              "📝 **Please keep this Issue open while the reported problem remains unresolved.**",
+              "",
+              "If possible, include reproduction steps, error messages, logs, screenshots, and other relevant details.",
+              "",
+              "🤖 **Please note:** This project uses automated Issue management workflows.",
+              "",
+              "If you close an Issue that you originally created, an automatic warning will be posted and a **24-hour security period** will begin.",
+              "",
+              "🔒 After 24 hours, the `Issue Security Lock` workflow may automatically close and lock the Issue. Reopening it does not cancel or reset this process.",
+              "",
+              "⚠️ **Please close your Issue only when the reported matter is resolved or no longer requires discussion.**",
+              "",
+              "Thank you for helping us keep the Issue tracker clear and manageable.",
+              "",
+              "— Issue welcome Bot"
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: message
+            });
